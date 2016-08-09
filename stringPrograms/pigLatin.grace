@@ -32,7 +32,7 @@ method encodeWord(word) {
 method decodeWord(word) {
     if (word.endsWith("yay")) then {
         word.substringFrom (1) size (word.size-3)
-    } elseif (word.endsWith("ay")) then {
+    } elseif { word.endsWith "ay"} then {
         (word.at(word.size-2)) ++ (word.substringFrom (1) size (word.size-3))
     } else {
         word
