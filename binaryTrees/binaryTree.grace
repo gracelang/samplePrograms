@@ -1,10 +1,11 @@
+import "random" as random
 def ConcurrentModification = ProgrammingError.refine "ConcurrentModification "
 
 method empty {
-    withAll []
+    withAll [ ]
 }
 
-class withAll(pairs:Collection) {
+class withAll(pairs:Iterable) {
     // answers a new mutable binary tree containing pairs, a which must be
     // a collection of key-value bindings.
 
@@ -24,6 +25,8 @@ class withAll(pairs:Collection) {
             block1.apply(key::data)
             right.do(block1)
         }
+        method == (other) { isMe(other) }    // so I can be a dictionary key
+        def hash is readable = random.integerIn 0 to (2^32)   
     }
 
     def emptyTree = object {
@@ -38,7 +41,7 @@ class withAll(pairs:Collection) {
         nodeContaining(key, data) withChildren(emptyTree, emptyTree)
     }
 
-    var root := emptyTree
+    var root is readable := emptyTree
     var size is readable := 0
     var eventCount := 0
     
@@ -55,13 +58,13 @@ class withAll(pairs:Collection) {
         def addNode' = { newNode', currentNode -> 
             if (newNode'.isEmpty) then {
                 currentNode
-            } elseif (currentNode.isEmpty) then {
+            } elseif {currentNode.isEmpty} then {
                 size := size + 1
                 newNode'
-            } elseif (newNode'.key < currentNode.key) then {
+            } elseif {newNode'.key < currentNode.key} then {
                 currentNode.left := addNode'.apply(newNode', currentNode.left)
                 currentNode
-            } elseif (newNode'.key > currentNode.key) then {
+            } elseif {newNode'.key > currentNode.key} then {
                 currentNode.right := addNode'.apply(newNode', currentNode.right)
                 currentNode
             } else {
@@ -85,10 +88,10 @@ class withAll(pairs:Collection) {
         def remove' = { key', parentNode, currentNode -> 
             if (currentNode.isEmpty) then {
                 NoSuchObject.raise "Can't remove key {key} because it is not present"
-            } elseif (key' < currentNode.key) then {
+            } elseif {key' < currentNode.key} then {
                 currentNode.left := remove'.apply(key', currentNode, currentNode.left)
                 currentNode
-            } elseif (key' > currentNode.key) then {
+            } elseif {key' > currentNode.key} then {
                 currentNode.right := remove'.apply(key', currentNode, currentNode.right)
                 currentNode
             } else {
@@ -108,9 +111,9 @@ class withAll(pairs:Collection) {
         def at' = { key', currentNode -> 
             if (currentNode.isEmpty) then {
                 NoSuchObject.raise
-            } elseif (key' < currentNode.key) then {
+            } elseif {key' < currentNode.key} then {
                 at'.apply(key', currentNode.left)
-            } elseif (key' > currentNode.key) then {
+            } elseif {key' > currentNode.key} then {
                 at'.apply(key', currentNode.right)
             } else {
                 return currentNode.data
@@ -128,7 +131,7 @@ class withAll(pairs:Collection) {
     method do(block1) {
         root.do(block1)
     }
-    class iterator<T> {
+    class iterator⟦T⟧ {
         def zipper is readable = list []
         def savedEventCount = eventCount
         addLeftmostPath(root)

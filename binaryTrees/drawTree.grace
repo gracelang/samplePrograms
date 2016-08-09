@@ -45,7 +45,7 @@ method drawEdgeFrom(s) to (e) {
 }
 
 // An example tree to demonstrate the algorithm
-def exampleTree = tree.with [ ]
+def exampleTree = tree.withAll [ ]
 tournamentTree(exampleTree, 1, 10)
 method tournamentTree(grow, lo, hi) {
     if (lo <= hi) then {
