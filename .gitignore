@@ -1,0 +1,7 @@
+*.c
+*.gcn
+*.gso
+*.gso.dSYM
+*.gso.dSYM/*
+*.js
+*.gct
