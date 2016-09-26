@@ -1,7 +1,7 @@
 dialect "objectdraw"
 print(1@2)
 def crossHairs = object {
-  inherits graphicApplicationSize(400@400)
+  inherit graphicApplicationSize(400@400)
 
   // lines forming crosshairs
   def vertical = lineFrom ((canvas.width/2) @ 0) 
