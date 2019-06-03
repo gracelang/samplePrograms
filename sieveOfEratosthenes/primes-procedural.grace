@@ -3,10 +3,11 @@ var limit
 
 method initialize(maxPrime) {
     limit := maxPrime
-    sieve := (1..((limit-1)/2).truncated).map { each -> true }.asList   
+    sieve := (1..((limit-1)/2).truncated).map { each -> true } >> list   
 }
 method markNot(n) {
     // mark the fact that n is not a prime
+    if (n.isEven) then { return }
     sieve.at((n-1)/2) put(false)
 }
 method next(n) {
@@ -18,7 +19,7 @@ method next(n) {
 
 method print {
     sieve.keysAndValuesDo { n, b -> 
-        if (b) then { prelude.print((2*n) + 1) } 
+        if (b) then { print((2*n) + 1) } 
     }
 }
 
@@ -28,9 +29,9 @@ method runSieve {
     do {
         ix := currentPrime * 2
         while {ix ≤ limit} do {
-            self.markNot(ix)
+            markNot(ix)
             ix := ix + currentPrime
         }
-        currentPrime := self.next(currentPrime)
+        currentPrime := next(currentPrime)
     } while { (currentPrime * currentPrime) ≤ limit }
 }
