@@ -1,75 +1,16 @@
 import "twoThreeTree" as ttt
+import "collections" as collections
 
 def NotImplementedError = Exception.refine "not implemented"
 
-type MinimalDictionary = type {
+type MinimalDictionary = interface {
     size -> Number
     at(_)ifAbsent(_) -> Unknown
 }
 
-// *********** copied from collectionPrelude ****************
-
-type MinimallyIterable⟦T⟧ = type {
-    iterator -> Iterator⟦T⟧
-}
-class lazySequenceOver⟦T,R⟧ (source: MinimallyIterable⟦T⟧) -> Enumerable⟦R⟧ is confidential {
-    use collections.enumerable⟦T⟧
-    method iterator { source.iterator }
-    method size { source.size }
-    method isEmpty { source.isEmpty }
-    method asDebugString { "a lazy sequence over {source}" }
-}
-class lazySequenceOver⟦T,R⟧ (source: MinimallyIterable⟦T⟧)
-        mappedBy (function:Block1⟦T,R⟧) -> Enumerable⟦R⟧ is confidential {
-    use collections.enumerable⟦T⟧
-    class iterator {
-        def sourceIterator = source.iterator
-        method asString { "an iterator over a lazy map sequence" }
-        method hasNext { sourceIterator.hasNext }
-        method next { function.apply(sourceIterator.next) }
-    }
-    method size { source.size }
-    method isEmpty { source.isEmpty }
-    method asDebugString { "a lazy sequence mapping over {source}" }
-}
-
-class lazySequenceOver⟦T⟧ (source: MinimallyIterable⟦T⟧)
-        filteredBy(predicate:Block1⟦T,Boolean⟧) -> Enumerable⟦T⟧ is confidential {
-    use collections.enumerable⟦T⟧
-    class iterator {
-        var cache
-        var cacheLoaded := false
-        def sourceIterator = source.iterator
-        method asString { "an iterator over filtered {source}" }
-        method hasNext {
-        // To determine if this iterator has a next element, we have to find
-        // an acceptable element; this is then cached, for the use of next
-            if (cacheLoaded) then { return true }
-            try {
-                cache := nextAcceptableElement
-                cacheLoaded := true
-            } catch { ex:IteratorExhausted -> return false }
-            return true
-        }
-        method next {
-            if (cacheLoaded.not) then { cache := nextAcceptableElement }
-            cacheLoaded := false
-            return cache
-        }
-        method nextAcceptableElement is confidential {
-        // return the next element of the underlying iterator satisfying
-        // predicate; if there is none, raises IteratorExhausted.
-            while { true } do {
-                def outerNext = sourceIterator.next
-                def acceptable = predicate.apply(outerNext)
-                if (acceptable) then { return outerNext }
-            }
-        }
-    }
-    method asDebugString { "a lazy sequence filtering {source}" }
-}
-
 class treeDictionary⟦K,T⟧ (someItems) {
+    use equality
+    use collections.collection⟦T⟧
     def theTree = ttt.empty
 
     someItems.do { item -> theTree.at (item.key) put (item.value) }
@@ -77,17 +18,20 @@ class treeDictionary⟦K,T⟧ (someItems) {
     method sizeIfUnknown(action) -> Number { theTree.size }
     method size -> Number { theTree.size }
     method isEmpty { size == 0 }
+
+    method << (source:Collection⟦Binding⟦K,T⟧⟧) { self.addAll(source) }
+    method >> (target) { target << self.bindings  }
     
     method containsKey (k:K) -> Boolean {
         theTree.at (k) ifAbsent {return false}
         return true
     }
 
-    method do (action:Proc⟦T⟧) -> Done {
+    method do (action:Procedure1⟦T⟧) -> Done {
         theTree.do { eachBinding -> action.apply(eachBinding.value) }
     }
 
-    method bindingsDo (action:Proc⟦Binding⟦K,T⟧⟧) -> Done {
+    method bindingsDo (action:Procedure1⟦Binding⟦K,T⟧⟧) -> Done {
         theTree.do(action)
     }
 
@@ -117,15 +61,15 @@ class treeDictionary⟦K,T⟧ (someItems) {
     }
 
     method keys {
-        lazySequenceOver (theTree) mappedBy { b -> b.key }
+        collections.lazySequenceOver (theTree) mappedBy { b -> b.key }
     }
 
     method values {
-        lazySequenceOver (theTree) mappedBy { b -> b.value }
+        collections.lazySequenceOver (theTree) mappedBy { b -> b.value }
     }
 
     method bindings {
-        lazySequenceOver (theTree)
+        collections.lazySequenceOver (theTree) mappedBy { b -> b }
     }
 
     method keysAndValuesDo (action) {
@@ -185,7 +129,7 @@ class treeDictionary⟦K,T⟧ (someItems) {
 
     method == (other) {
         if (isMe(other)) then { return true }
-        if (MinimalDictionary.match(other).not) then {
+        if (MinimalDictionary.matches(other).not) then {
             return false
         }
         if (size != other.size) then { return false }
@@ -255,11 +199,11 @@ class treeDictionary⟦K,T⟧ (someItems) {
         }
         return result
     }
-    method map⟦R⟧(block1:Block1⟦T,R⟧) -> Enumerable⟦R⟧ {
-        lazySequenceOver(self) mappedBy(block1)
+    method map⟦R⟧(block1:Function1⟦T,R⟧) -> Enumerable⟦R⟧ {
+        collections.lazySequenceOver(self) mappedBy(block1)
     }
-    method filter(selectionCondition:Block1⟦T,Boolean⟧) -> Enumerable⟦T⟧ {
-        lazySequenceOver(self) filteredBy(selectionCondition)
+    method filter(selectionCondition:Function1⟦T,Boolean⟧) -> Enumerable⟦T⟧ {
+        collections.lazySequenceOver(self) filteredBy(selectionCondition)
     }
     method clear {
         theTree.clear

@@ -1,11 +1,16 @@
 import "gUnit" as gU
 import "random" as random
 import "dictionary" as z
+import "collections" as collections
 
 def td = object {
     method dictionary (initialBindings) {
         z.treeDictionary (initialBindings)
     }
+}
+
+method standardDictionary (bindings) {
+    collections.dictionary.withAll (bindings)
 }
 
 def dictionaryTest = object {
@@ -29,7 +34,7 @@ def dictionaryTest = object {
             assert (oneToFive) hasType (Dictionary⟦String,Number⟧)
         }
         method testDictionaryTypeNotTypeWithWombat {
-            deny (oneToFive) hasType (Dictionary⟦String,Number⟧ & type { wombat })
+            deny (oneToFive) hasType (Dictionary⟦String,Number⟧ & interface { wombat })
         }
 
         method testDictionarySize {
@@ -39,7 +44,7 @@ def dictionaryTest = object {
         }
 
         method testDictionaryEmptyDo {
-            empty.do {each -> failBecause "emptySet.do did with {each}"}
+            empty.do {each -> failBecause "empty.do did with {each}"}
             assert (true)   // so that there is always an assert
         }
         
@@ -54,8 +59,8 @@ def dictionaryTest = object {
         }
 
         method testDictionaryEqualityEmpty {
-            assert(empty == emptyDictionary)
-            deny(empty != emptyDictionary)
+            assert(empty == dictionary.empty)
+            deny(empty != dictionary.empty)
         }
         method testDictionaryInequalityEmpty {
             deny(empty == td.dictionary ["one"::1])
@@ -125,12 +130,12 @@ def dictionaryTest = object {
         method testDictionaryAdd {
             assert (empty.at "nine" put(9))
                 shouldBe (td.dictionary ["nine"::9])
-            assert (evens.at "ten" put(10).values.into (emptySet))
+            assert (evens.at "ten" put(10).values.into (set.empty))
                 shouldBe (set [2, 4, 6, 8, 10])
         }
         method testDictionaryChaining {
             oneToFive.at "eleven" put(11).at "twelve" put(12).at "thirteen" put(13)
-            assert (oneToFive.values.into (emptySet)) shouldBe (set [1, 2, 3, 4, 5, 11, 12, 13])
+            assert (oneToFive.values.into (set)) shouldBe (set [1, 2, 3, 4, 5, 11, 12, 13])
         }
 
         method testDictionaryFold {
@@ -173,11 +178,11 @@ def dictionaryTest = object {
         }
 
         method testDictionaryMapEmpty {
-            assert (empty.map{x -> x * x}.into (emptySet)) shouldBe (emptySet)
+            assert (empty.map{x -> x * x}.into (set)) shouldBe (set)
         }
 
         method testDictionaryMapEvens {
-            assert(evens.map{x -> x + 1}.into (emptySet)) shouldBe (set [3, 5, 7, 9])
+            assert(evens.map{x -> x + 1}.into (set)) shouldBe (set [3, 5, 7, 9])
         }
 
         method testDictionaryMapEvensInto {
@@ -194,24 +199,24 @@ def dictionaryTest = object {
         }
 
         method testDictionaryFilterOdd {
-            assert(oneToFive.filter{x -> (x % 2) == 1}.into (emptySet))
+            assert(oneToFive.filter{x -> (x % 2) == 1}.into (set))
                 shouldBe (set [1, 3, 5])
         }
 
         method testDictionaryMapAndFilter {
-            assert(oneToFive.map{x -> x + 10}.filter{x -> (x % 2) == 1}.into(emptySet))
+            assert(oneToFive.map{x -> x + 10}.filter{x -> (x % 2) == 1}.into(set))
                 shouldBe (set [11, 13, 15])
         }
         method testDictionaryBindings {
-            assert(oneToFive.bindings.into (emptySet)) shouldBe (
+            assert(oneToFive.bindings.into (set)) shouldBe (
                 set ["one"::1, "two"::2, "three"::3, "four"::4, "five"::5])
         }
         method testDictionaryKeys {
-            assert(oneToFive.keys.into (emptySet)) shouldBe (
+            assert(oneToFive.keys.into (set)) shouldBe (
                 set ["one", "two", "three", "four", "five"] )
         }
         method testDictionaryValues {
-            assert(oneToFive.values.into (emptySet)) shouldBe (
+            assert(oneToFive.values.into (set)) shouldBe (
                 set [1, 2, 3, 4, 5] )
         }
 
@@ -232,10 +237,10 @@ def dictionaryTest = object {
         method testDictionaryValuesEmpty {
             def vs = empty.values
             assert(vs.isEmpty)
-            assert(vs) shouldBe (emptySequence)
+            assert(vs) shouldBe [ ]
         }
         method testDictionaryKeysEmpty {
-            assert(empty.keys) shouldBe (emptySequence)
+            assert(empty.keys) shouldBe [ ]
         }
         method testDictionaryValuesSingle {
             assert(td.dictionary ["one"::1].values) shouldBe
@@ -347,16 +352,16 @@ def dictInteroperabilityTest = object {
                                                  "four"::4, "five"::5]
             evens := td.dictionary ["two"::2, "four"::4, "six"::6, "eight"::8]
             empty := td.dictionary [ ]
-            oneToFiveStd := prelude.dictionary ["one"::1, "two"::2, "three"::3,
+            oneToFiveStd := standardDictionary ["one"::1, "two"::2, "three"::3,
                                                  "four"::4, "five"::5]
-            evensStd := prelude.dictionary ["two"::2, "four"::4, "six"::6, "eight"::8]
-            emptyStd := prelude.emptyDictionary
+            evensStd := standardDictionary ["two"::2, "four"::4, "six"::6, "eight"::8]
+            emptyStd := standardDictionary []
         }
 
         method testDictionaryInequalityEmpty {
-            deny(empty == prelude.dictionary ["one"::1])
+            deny(empty == standardDictionary ["one"::1])
                 description "empty dictionary equals dictionary with \"one\"::1"
-            assert(empty != prelude.dictionary ["two"::2])
+            assert(empty != standardDictionary ["two"::2])
                 description "empty dictionary equals dictionary with \"two\"::2"
             deny(empty == evensStd)
         }
@@ -366,14 +371,14 @@ def dictInteroperabilityTest = object {
         }
         method testDictionaryEqualityOne {
             assert (td.dictionary ["Hello"::10])
-                shouldBe (prelude.dictionary ["Hello"::10])
-            assert (prelude.dictionary ["Hello"::10])
+                shouldBe (standardDictionary ["Hello"::10])
+            assert (standardDictionary ["Hello"::10])
                 shouldBe (td.dictionary ["Hello"::10])
         }
         method testDictionaryEqualityTwo {
-            assert (prelude.dictionary ["Hello"::10, "World"::99])
+            assert (standardDictionary ["Hello"::10, "World"::99])
                 shouldBe (td.dictionary ["World"::99, "Hello"::10])
-            assert (prelude.dictionary ["Hello"::10, "World"::99])
+            assert (standardDictionary ["Hello"::10, "World"::99])
                 shouldBe (td.dictionary ["World"::99, "Hello"::10])
         }
         method testDictionaryEqualityFive {
@@ -383,20 +388,20 @@ def dictInteroperabilityTest = object {
             def ei = evens.bindings.iterator
             assert (evens.size == 4) description "evens doesn't contain 4 elements!"
             assert (ei.hasNext) description "the evens iterator has no elements"
-            def copyDict = prelude.dictionary [ei.next, ei.next, ei.next, ei.next]
+            def copyDict = standardDictionary [ei.next, ei.next, ei.next, ei.next]
             deny (ei.hasNext) description "the evens iterator has more than 4 elements"
             assert (evens) shouldBe (copyDict)
         }
         method testDictionaryAtPut {
             assert (empty.at "nine" put(9))
-                shouldBe (prelude.dictionary ["nine"::9])
+                shouldBe (standardDictionary ["nine"::9])
         }
         method testDictionaryCopy {
             def evensCopy = evens.copy
             evens.at "ten" put 10
             assert (evens.size) shouldBe 5
             assert (evensCopy) shouldBe
-                (prelude.dictionary ["two"::2, "four"::4, "six"::6, "eight"::8])
+                (standardDictionary ["two"::2, "four"::4, "six"::6, "eight"::8])
         }
         method testDictionaryAsDictionary {
             assert(evens.asDictionary) shouldBe (evensStd)
@@ -420,8 +425,8 @@ def dictRemovalTest = object {
         }
 
         method testDictionaryRemoveKeyTwo {
-            assert (evens.removeKey "two".values.into (emptySet)) shouldBe (set [4, 6, 8])
-            assert (evens.values.into (emptySet)) shouldBe (set [4, 6, 8])
+            assert (evens.removeKey "two".values.into (set)) shouldBe (set [4, 6, 8])
+            assert (evens.values.into (set)) shouldBe (set [4, 6, 8])
         }
         method testDictionaryRemoveValue4 {
             assert (evens.size == 4) description "evens doesn't contain 4 elements"
@@ -433,13 +438,13 @@ def dictRemovalTest = object {
             assert (evens.containsKey "six") description "Can't find key \"six\""
             assert (evens.containsKey "eight") description "Can't find key \"eight\""
             deny (evens.containsKey "four") description "Found key \"four\""
-            assert (evens.removeValue 4 ifAbsent { }.values.into (emptySet)) shouldBe (set [2, 6, 8])
-            assert (evens.values.into (emptySet)) shouldBe (set [2, 6, 8])
-            assert (evens.keys.into (emptySet)) shouldBe (set ["two", "six", "eight"])
+            assert (evens.removeValue 4 ifAbsent { }.values.into (set)) shouldBe (set [2, 6, 8])
+            assert (evens.values.into (set)) shouldBe (set [2, 6, 8])
+            assert (evens.keys.into (set)) shouldBe (set ["two", "six", "eight"])
         }
         method testDictionaryRemoveMultiple {
             evens.removeValue 4 .removeValue 6 .removeValue 8
-            assert (evens) shouldBe (emptyDictionary.at "two" put 2)
+            assert (evens) shouldBe (dictionary.empty.at "two" put 2)
         }
         method testDictionaryRemove5 {
             assert {evens.removeKey 5} shouldRaise (NoSuchObject)
@@ -476,7 +481,7 @@ def dictRemovalTest = object {
             evens.at "sixteen" put(16)
             evens.at "eighteen" put(18)
             evens.at "twenty" put(20)
-            assert (evens.values.into (emptySet))
+            assert (evens.values.into (set))
                 shouldBe (set [8, 10, 12, 14, 16, 18, 20])
         }
 
@@ -486,7 +491,7 @@ def dictRemovalTest = object {
             evens.removeValue(4)
             assert (evens.size) shouldBe 2
             assert (evensCopy) shouldBe
-                (prelude.dictionary ["two"::2, "four"::4, "six"::6, "eight"::8])
+                (standardDictionary ["two"::2, "four"::4, "six"::6, "eight"::8])
         }
 
     }

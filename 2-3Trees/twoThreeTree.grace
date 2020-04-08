@@ -5,6 +5,7 @@
 // adding a new mapping to a threeNode splits it into a pair of twoNodes,
 // and creates a new entry in the parent node.
 
+import "collections" as collections
 
 type Node⟦K,V⟧ = Unknown
 
@@ -17,7 +18,7 @@ class empty⟦K,V⟧ {
     
     var deletedCount := 0
     
-    def Deleted = Singleton.named("Deleted Item")
+    def Deleted = singleton "Deleted Item"
     
     class twoNode(l:Node⟦K,V⟧, b:Binding⟦K,V⟧, r:Node⟦K,V⟧) is confidential {
         var contents is readable := b
@@ -260,12 +261,11 @@ class empty⟦K,V⟧ {
                 contents := new
                 return
             }
-            def newNode =
-                if (new.key < contents.key) then {
-                    threeLeafNode(new, contents)
-                } else {
-                    threeLeafNode(contents, new)
-                }
+            def newNode = if (new.key < contents.key) then {
+                threeLeafNode(new, contents)
+            } else {
+                threeLeafNode(contents, new)
+            }
             replaceMeBy.apply(newNode)
             size := size + 1
         }
@@ -341,12 +341,11 @@ class empty⟦K,V⟧ {
                 return
             }
             size := size + 1
-            sort3(leftContents, rightContents, new) in {
-                low, mid, high ->
-                    def newLeft = twoLeafNode(low)
-                    def newRight = twoLeafNode(high)
-                    def tempParent = twoNode(newLeft, mid, newRight)
-                    absorb.apply(tempParent)
+            sort3(leftContents, rightContents, new) in { low, mid, high ->
+                def newLeft = twoLeafNode(low)
+                def newRight = twoLeafNode(high)
+                def tempParent = twoNode(newLeft, mid, newRight)
+                absorb.apply(tempParent)
             }
         }
         
@@ -416,7 +415,7 @@ class empty⟦K,V⟧ {
                 return rightContents
             }
         }
-        method sort3(a, b, c) in (body:Block) is public {
+        method sort3(a, b, c) in (body:Function3) is public {
             // Assume a.key ⟦ b.key; execute body with three arguments
             // x, y, z, being a permutation of a, b and c, such that
             // x.key ⟦ y.key ⟦ z.key
@@ -456,7 +455,7 @@ class empty⟦K,V⟧ {
     method asDebugString { root.asDebugString }
     method asString { "a two-three tree of size {size}" }
 
-    method do(action:Block⟦Binding⟦K,V⟧, Done⟧) {
+    method do(action:Procedure1⟦Binding⟦K,V⟧⟧) {
         root.do(action)
     }
     class iterator {
@@ -531,7 +530,8 @@ class empty⟦K,V⟧ {
             root := emptyNode
             size := 0
             deletedCount := 0
-            oldRoot.do {each -> root.add (each)
+            oldRoot.do {each ->
+                root.add (each)
                     setParent { nu -> root := nu }
                     absorb { tba -> root := tba }}
         }
