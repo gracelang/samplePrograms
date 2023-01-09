@@ -416,9 +416,9 @@ class empty⟦K,V⟧ {
             }
         }
         method sort3(a, b, c) in (body:Function3) is public {
-            // Assume a.key ⟦ b.key; execute body with three arguments
+            // Assume a.key ≤ b.key; execute body with three arguments
             // x, y, z, being a permutation of a, b and c, such that
-            // x.key ⟦ y.key ⟦ z.key
+            // x.key ≤ y.key ≤ z.key
             
             def ak = a.key
             def bk = b.key
