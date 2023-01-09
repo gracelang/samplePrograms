@@ -6,7 +6,7 @@ method empty {
 }
 
 class withAll(pairs:Iterable) {
-    // answers a new mutable binary tree containing pairs, a which must be
+    // answers a new mutable binary tree containing pairs, which must be
     // a collection of key-value bindings.
 
     class nodeContaining(key', data')withChildren(left', right') is confidential {
