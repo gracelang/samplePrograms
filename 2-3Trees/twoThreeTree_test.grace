@@ -18,7 +18,7 @@ testSuiteNamed "basic 2-3 tree" with {
  
     test "add to empty" by {
         e.at 3 put "three"
-        var contents := emptyList
+        var contents := list.empty
         assert (e.size) shouldBe 1
         e.do { each -> contents.add(each) }
         assert (contents) shouldBe [ 3::"three" ]
@@ -31,7 +31,7 @@ testSuiteNamed "basic 2-3 tree" with {
 
     test "add 3 and 2 to empty contents" by {
         e.at 3 put "three".at 2 put "two"
-        var contents := emptyList
+        var contents := list.empty
         e.do { each -> contents.add(each) }
         assert (contents) shouldBe [ 2::"two", 3::"three" ]
     }
@@ -43,7 +43,7 @@ testSuiteNamed "basic 2-3 tree" with {
 
     test "add 3, 2 and 1 to empty contents" by {
         e.at 3 put "three".at 2 put "two".at 1 put "one"
-        var contents := emptyList
+        var contents := list.empty
         e.do { each -> contents.add(each) }
         assert (contents) shouldBe [ 1::"one", 2::"two", 3::"three" ]
     }
@@ -55,7 +55,7 @@ testSuiteNamed "basic 2-3 tree" with {
 
     test "add 1–4 to empty contents" by {
         e.at 2 put "two".at 3 put "three".at 1 put "one".at 4 put "four"
-        var contents := emptyList
+        var contents := list.empty
         e.do { each -> contents.add(each) }
         assert (contents) shouldBe [ 1::"one", 2::"two", 3::"three", 4::"four" ]
     }
@@ -69,7 +69,7 @@ testSuiteNamed "basic 2-3 tree" with {
     test "add 1–5 to empty contents" by {
         e.at 2 put "two".at 3 put "three".at 1 put "one".at 4 put "four"
         e.at 5 put "five"
-        var contents := emptyList
+        var contents := list.empty
         e.do { each -> contents.add(each) }
         assert (contents) shouldBe [ 1::"one", 2::"two", 3::"three", 4::"four",
             5::"five" ]
@@ -141,25 +141,38 @@ testSuiteNamed "basic 2-3 tree" with {
         assert (t.size) shouldBe (num)
         (1..num).do { each ->
             assert (t.at(each+0.5) ifAbsent { "absent" } ) shouldBe "absent"
-            assert { t.at(each+0.5) ifAbsent { 
-                NoSuchObject.raise "non-integral argument to at(_)"} 
+            assert { 
+                t.at(each+0.5) ifAbsent { 
+                    NoSuchObject.raise "non-integral argument to at(_)"
+                } 
             } shouldRaise (NoSuchObject)
         }
     }
-    test "add 1–5 to empty remove 3-4 size" by {
+    test "add 1–5 to empty remove 3-4 size & pipe" by {
         e.at 2 put "two".at 3 put "three".at 1 put "one".at 4 put "four"
         e.at 5 put "five"
         e.removeKey 3.removeValue "four"
         assert (e.size) shouldBe 3
+        assert (e >> set.empty) shouldBe ([1::"one", 2::"two", 5::"five"] >> set)
     }
-    test "add 1–5 to empty remove 3-4 contents" by {
+    test "add 1–5 to empty remove 3-4 do" by {
         e.at 2 put "two".at 3 put "three".at 1 put "one".at 4 put "four"
         e.at 5 put "five"
         e.removeKey 3.removeValue "four"
-        var contents := emptyList
+        var contents := list.empty
         e.do { each -> contents.add(each) }
         assert (contents) shouldBe [ 1::"one", 2::"two", 5::"five" ]
     }
+    test "add 1–5 to empty remove 3-4 iterator" by {
+        e.at 2 put "two".at 3 put "three".at 1 put "one".at 4 put "four"
+        e.at 5 put "five"
+        e.removeKey 3.removeValue "four"
+        var contents := set.empty
+        def iter = e.iterator
+        while { iter.hasNext } do { contents.add (iter.next) }
+        assert (contents) shouldBe ([ 1::"one", 2::"two", 5::"five" ] >> set)
+    }
+    
     test "add 100 random remove even" by {
         def num = 100
         def source = list (1..num)

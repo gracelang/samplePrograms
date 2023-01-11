@@ -31,7 +31,7 @@ class empty⟦K,V⟧ {
         }
         method do (action) -> Done {
             left.do(action)
-            if (Deleted != contents.value) then {
+            if (Deleted ≠ contents.value) then {
                 action.apply(contents)
             }
             right.do(action)
@@ -122,11 +122,11 @@ class empty⟦K,V⟧ {
         }
         method do (action) -> Done {
             left.do(action)
-            if (Deleted != leftContents.value) then {
+            if (Deleted ≠ leftContents.value) then {
                 action.apply(leftContents)
             }
             middle.do(action)
-            if (Deleted != rightContents.value) then {
+            if (Deleted ≠ rightContents.value) then {
                 action.apply(rightContents)
             }
             right.do(action)
@@ -252,7 +252,7 @@ class empty⟦K,V⟧ {
             "(2L: {contents})"
         }
         method do (action) -> Done {
-            if (Deleted != contents.value) then {
+            if (Deleted ≠ contents.value) then {
                 action.apply(contents)
             }
         }
@@ -325,10 +325,10 @@ class empty⟦K,V⟧ {
             "(3L: {leftContents}, {rightContents})"
         }
         method do (action) -> Done {
-            if (Deleted != leftContents.value) then {
+            if (Deleted ≠ leftContents.value) then {
                 action.apply(leftContents)
             }
-            if (Deleted != rightContents.value) then {
+            if (Deleted ≠ rightContents.value) then {
                 action.apply(rightContents)
             }
         }
@@ -458,9 +458,16 @@ class empty⟦K,V⟧ {
     method do(action:Procedure1⟦Binding⟦K,V⟧⟧) {
         root.do(action)
     }
+    method values {
+        def result = list.empty
+        root.do {each → result.addLast(each)}
+        result
+    }
     class iterator {
         def zipper = list []
         def initialMods = mods
+        var stashed := false  // is there a next element stashed ?
+        var stash             // the next element, if stashed is true
 
         root.buildZipperFor(self)
 
@@ -468,17 +475,37 @@ class empty⟦K,V⟧ {
             zipper.addLast(aTooth)
         }
             
-        method hasNext { zipper.isEmpty.not }
-
+        method hasNext {
+            if (stashed) then { return true }
+            try {
+                stash := nextWithoutDeleted
+                stashed := true
+            } catch {
+                ex: IteratorExhausted -> return false
+            }
+            true
+        }
         method next {
             if (mods != initialMods) then {
                 ConcurrentModification.raise "on dictionary"
             }
-            if (hasNext.not) then {
-                IteratorExhausted.raise "on dictionary"
+            if (stashed) then {
+                stashed := false
+                stash
+            } else {
+                nextWithoutDeleted
             }
-            def thisTooth = zipper.removeLast
-            thisTooth.visit(self)
+        }
+        method nextWithoutDeleted is confidential {
+            var result
+            do {
+                if (zipper.isEmpty) then {
+                    IteratorExhausted.raise "on dictionary"
+                }
+                def thisTooth = zipper.removeLast
+                result := thisTooth.visit(self)
+            } while { Deleted == result.value }
+            result
         }
     }
     method isEmpty { size == 0 }
@@ -541,5 +568,21 @@ class empty⟦K,V⟧ {
         root := emptyNode
         size := 0
         deletedCount := 0
+    }
+    method == (other) {
+        if (self.size ≠ other.size) then { return false }
+        def otherIter = other.iterator
+        self.do { eachBinding → 
+            def otherBinding = otherIter.next
+            if (eachBinding ≠ otherBinding) then { return false }
+        }
+        true
+    }
+    method ≠ (other) { (self == other).not }
+    method ++ (other) {
+        def result = empty
+        self.do { b → result.at(b.key) put(b.value) }
+        other.do { b → result.at(b.key) put(b.value) }
+        result
     }
 }

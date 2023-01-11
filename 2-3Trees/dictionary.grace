@@ -24,7 +24,7 @@ class treeDictionary⟦K,T⟧ (someItems) {
     
     method containsKey (k:K) -> Boolean {
         theTree.at (k) ifAbsent {return false}
-        return true
+        true
     }
 
     method do (action:Procedure1⟦T⟧) -> Done {
@@ -48,26 +48,35 @@ class treeDictionary⟦K,T⟧ (someItems) {
     // TODO come back here later if I have time and try to implement them
 
     method removeAllKeys (keyList) {
-        NotImplementedError.raise "removeAllKeys is not implemented yet"
+        keyList.do { each → theTree.removeKey(each) }
+        self
     }
     method removeKey (key) {
-        NotImplementedError.raise "removeKey is not implemented yet"
+        theTree.removeKey(key) ifAbsent { NoSuchObject.raise(key) }
+        self
+    }
+    method removeKey (key) ifAbsent (action) {
+        theTree.removeKey(key) ifAbsent (action)
+        self
     }
     method removeAllValues (valList) {
-        NotImplementedError.raise "removeAllValues is not implemented yet"
+        valList.do { each → theTree.removeValue(each) }
     }
     method removeValue (v) {
-        NotImplementedError.raise "removeValue is not implemented yet"
+        theTree.removeValue(v) ifAbsent { NoSuchObject.raise(v) }
+        self
     }
-
+    method removeValue (v) ifAbsent (action) {
+        theTree.removeValue(v) ifAbsent (action)
+        self
+    }
     method keys {
         collections.lazySequenceOver (theTree) mappedBy { b -> b.key }
     }
-
     method values {
         collections.lazySequenceOver (theTree) mappedBy { b -> b.value }
     }
-
+    
     method bindings {
         collections.lazySequenceOver (theTree) mappedBy { b -> b }
     }
