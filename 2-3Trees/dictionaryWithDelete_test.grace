@@ -1,6 +1,6 @@
 import "gUnit" as gU
 import "random" as random
-import "dictionary" as z
+import "dictionaryWithDelete" as z
 import "collections" as collections
 
 def td = object {

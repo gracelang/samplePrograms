@@ -1,5 +1,5 @@
 dialect "minitest"
-import "twoThreeTree" as twoThreeTree
+import "twoThreeTreeWithDelete" as twoThreeTree
 import "random" as random
 import "io" as io
 
